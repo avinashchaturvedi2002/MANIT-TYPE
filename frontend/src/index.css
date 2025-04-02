@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.blinking-cursor {
+  color: yellow;
+  font-weight: bold;
+  animation: blink 1s infinite;
+  opacity: 70%;
+}

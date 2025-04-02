@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaTrophy, FaInfoCircle, FaBell, FaUserCircle } from "react-icons/fa";
+import { FaTrophy, FaInfoCircle, FaBell, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import NotificationModal from "./NotificationModal";
@@ -8,41 +8,45 @@ import axios from "axios";
 const NavBar = ({ user }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0); // Track unread notifications
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/v1/user/notifications/`,{
+        const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/notifications`,{
           params: { email: user.email },
         });
-        setUnreadCount(data.length); // Set count of unread notifications
+        setUnreadCount(data.length);
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
     };
 
     fetchUnreadCount();
-  }, [user.email, showNotifications]); // Refetch when modal opens/closes
+  }, [user.email, showNotifications]);
 
   return (
     <>
       <nav className="w-full bg-gray-800 text-white flex justify-between items-center px-6 py-3 relative">
         <Link to="/">
-          <h1 className="text-3xl font-bold cursor-pointer">MANIT TYPE</h1>
+          <h1 className="text-2xl md:text-3xl font-bold cursor-pointer">MANIT TYPE</h1>
         </Link>
-        <div className="flex gap-4 text-2xl">
-          <Link to="/leaderboard">
-            <FaTrophy className="cursor-pointer hover:text-yellow-400" title="Leaderboard" />
+        
+        <div className="md:hidden cursor-pointer" onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <FaTimes className="text-2xl" /> : <FaBars className="text-2xl" />}
+        </div>
+        
+        <div className={`absolute md:relative  top-full left-0 md:top-0 w-full md:w-auto bg-gray-800 md:flex-row flex items-center md:flex gap-4 text-2xl p-5 md:p-0 ${menuOpen ? "flex" : "hidden"}`}>
+          <Link to="/leaderboard" className="block md:inline">
+            <FaTrophy className="cursor-pointer hover:text-yellow-400 text-3xl" title="Leaderboard" />
           </Link>
-          <Link to="/about">
-  <FaInfoCircle className="cursor-pointer hover:text-green-400" title="About" />
-</Link>
+          <Link to="/about" className="block md:inline">
+            <FaInfoCircle className="cursor-pointer hover:text-green-400 text-3xl" title="About" />
+          </Link>
 
-          
-          {/* Bell Icon with Unread Badge */}
-          <div className="relative cursor-pointer" onClick={() => setShowNotifications(!showNotifications)}>
-            <FaBell className="hover:text-red-400" title="Notifications" />
+          <div className="relative cursor-pointer block md:inline" onClick={() => setShowNotifications(!showNotifications)}>
+            <FaBell className="hover:text-red-400 text-3xl" title="Notifications" />
             {unreadCount > 0 && (
               <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                 {unreadCount}
@@ -50,18 +54,13 @@ const NavBar = ({ user }) => {
             )}
           </div>
 
-          {/* Profile Icon */}
-          <div className="flex items-center gap-2 cursor-pointer hover:text-gray-300" title="Profile" onClick={() => setShowProfile(true)}>
+          <div className="flex items-center gap-2 cursor-pointer hover:text-gray-300 text-3xl md:inline" title="Profile" onClick={() => setShowProfile(true)}>
             <FaUserCircle />
-            <span className="text-lg">{user.displayName}</span>
           </div>
         </div>
 
-        {/* Show Notification Modal */}
         {showNotifications && <NotificationModal user={user} onClose={() => setShowNotifications(false)} />}
       </nav>
-
-      {/* Show Profile Modal */}
       {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
     </>
   );

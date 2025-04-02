@@ -12,7 +12,7 @@ const ProfileModal = ({ user, onClose }) => {
         if (!user || !user.email) return;
         console.log("Fetching profile for user:", user.email);
 
-        const { data } = await axios.get(`http://localhost:5000/api/v1/user/profile/`, {
+        const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/profile`, {
           params: { email: user.email },
         });
         console.log(data);
@@ -31,8 +31,10 @@ const ProfileModal = ({ user, onClose }) => {
       wpm: result.actualWPM,
     }));
 
+  const personalBest = filteredResults.length > 0 ? Math.max(...filteredResults.map((res) => res.wpm)) : "N/A";
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div className="bg-gray-900 text-white p-6 rounded-2xl shadow-lg w-2/3 relative border border-gray-700">
         <button className="absolute top-2 right-2 text-gray-400 hover:text-red-500" onClick={onClose}>
           ✖
@@ -51,6 +53,11 @@ const ProfileModal = ({ user, onClose }) => {
             <option value="60s">60s</option>
             <option value="120s">120s</option>
           </select>
+        </div>
+
+        {/* Display Personal Best */}
+        <div className="mb-4 text-lg font-semibold text-green-400">
+          Personal Best in {selectedMode}: {personalBest} WPM
         </div>
 
         <div className="w-full h-64">

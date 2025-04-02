@@ -1,6 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { User,Result,Leaderboard ,Notification} = require("../database/db");
+
+const { User,Result,Leaderboard ,Notification,Words} = require("../database/db");
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
@@ -10,9 +12,9 @@ router.post("/signup", async (req, res) => {
   const { name, email } = req.body;
 
   // Ensure only MANIT students can sign up
-  if (!email.endsWith("@stu.manit.ac.in")) {
-    return res.status(400).json({ message: "Only MANIT students can sign up." });
-  }
+  // if (!email.endsWith("@stu.manit.ac.in")) {
+  //   return res.status(400).json({ message: "Only MANIT students can sign up." });
+  // }
 
   try {
     let user = await User.findOne({ email });
@@ -58,7 +60,7 @@ router.post("/save-result", async (req, res) => {
     const user=await User.findOne({email:email})
     const userId=user._id
     if (!userId || !mode || actualWPM == null || accuracy == null) {
-      console.log(userId+" "+mode+" "+actualWPM+" "+accuracy)
+    
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -78,24 +80,31 @@ router.post("/save-result", async (req, res) => {
 
     res.status(201).json({ message: "Result saved successfully", result: newResult });
   } catch (error) {
-    console.error("Error saving result:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/leaderboard", async (req, res) => {
-  const { mode } = req.query; // Extract mode from query parameters
-  console.log("Requested mode:", mode);
+  const { mode, name } = req.query;
 
   try {
-    let filter = {};
-    if (mode) {
-      filter.mode = mode; // Apply filter only if mode is provided
+    let leaderboard;
+
+    if (mode && mode !== "all") {
+      leaderboard = await Leaderboard.find({ mode })
+        .populate("userId", "name email")
+        .sort({ bestWPM: -1 });
+    } else {
+      // Fetch best WPM per user per mode
+      leaderboard = await Leaderboard.find({})
+        .populate("userId", "name email")
+        .sort({ bestWPM: -1 });
     }
 
-    const leaderboard = await Leaderboard.find(filter)
-      .populate("userId", "name email") // Populate user details
-      .sort({ bestWPM: -1 }); // Sort by bestWPM in descending order
+    if (name) {
+      const regex = new RegExp(name, "i");
+      leaderboard = leaderboard.filter(entry => regex.test(entry.userId.name));
+    }
 
     res.status(200).json(leaderboard);
   } catch (error) {
@@ -103,9 +112,9 @@ router.get("/leaderboard", async (req, res) => {
   }
 });
 
+
 router.get("/profile", async (req, res) => {
   const { email } = req.query;
-  console.log(email);
   try {
     // Fetch results sorted by timestamp
     const userquery=await User.find({email:email})
@@ -140,7 +149,6 @@ router.post("/notifications", async (req, res) => {
     await newNotification.save();
     res.status(201).json(newNotification);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Error adding notification" });
   }
 });
@@ -171,15 +179,14 @@ router.get("/stats", async (req, res) => {
   try {
     const totalTests = await Result.countDocuments();
     const results = await Result.find({}, "mode");
-    console.log(results);
     // const totalDuration = results.reduce((sum, result) => {sum + getDurationFromMode(result.mode), 0});
     let duration=0;
     for(let i=0;i<results.length;i++)
     {
-      console.log(getDurationFromMode(results[i].mode));
+      
       duration+=parseInt(getDurationFromMode(results[i].mode));
     }
-    console.log(duration);
+
     res.json({ totalTests, duration });
   } catch (error) {
     console.error("Error fetching stats:", error);
@@ -187,5 +194,12 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-
+router.get("/get-random", async (req, res) => {
+  try {
+    const words = await Words.aggregate([{ $sample: { size: 800 } }]); // Get 800 random words
+    res.json(words.map((word) => word.text));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch words" });
+  }
+});
 module.exports = router;

@@ -8,7 +8,7 @@ const NotificationModal = ({ onClose,user }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/v1/user/notifications/`,{
+        const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/notifications`,{
           params: { email: user.email },
         });
         setNotifications(data);
@@ -21,7 +21,7 @@ const NotificationModal = ({ onClose,user }) => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/v1/user/notifications/${id}`, { email: user.email });
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/notifications/${id}`, { email: user.email });
       setNotifications(notifications.filter((notif) => notif._id !== id));
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -29,14 +29,14 @@ const NotificationModal = ({ onClose,user }) => {
   };
   
   return (
-    <div className="absolute right-0 mt-48 w-80 bg-gray-900 text-white shadow-lg rounded-lg p-4 z-50">
+    <div className="absolute right-0 top-16 w-80 bg-gray-900 text-white shadow-lg rounded-lg p-4 z-50">
       <h3 className="text-lg font-bold mb-2">Notifications</h3>
       {notifications.length === 0 ? (
         <p className="text-gray-400">No new notifications</p>
       ) : (
         <div className="max-h-60 overflow-y-auto">
           {notifications.map((notif) => (
-            <div key={notif._id} className="border-b border-gray-700 py-2 flex justify-between items-center">
+            <div key={notif._id} className="border-b border-gray-700 flex justify-between items-center">
               <span>{notif.message}</span>
               <button
                 onClick={() => markAsRead(notif._id)}

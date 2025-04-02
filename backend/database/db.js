@@ -42,4 +42,14 @@ const notificationSchema = new mongoose.Schema({
 
 const Notification = mongoose.model("Notification", notificationSchema);
 
-module.exports={User,Result,Leaderboard,Notification}
+const wordSchema = new mongoose.Schema({
+  text: {
+    type: String,
+    required: true,
+    unique: true, // Prevent duplicate words
+  },
+});
+
+const Words = mongoose.model("Word", wordSchema);
+
+module.exports={User,Result,Leaderboard,Notification,Words}
