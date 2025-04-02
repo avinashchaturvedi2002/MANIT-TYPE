@@ -10,12 +10,11 @@ const ProfileModal = ({ user, onClose }) => {
     const fetchProfileData = async () => {
       try {
         if (!user || !user.email) return;
-        console.log("Fetching profile for user:", user.email);
+        
 
         const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/profile`, {
           params: { email: user.email },
         });
-        console.log(data);
         setResults(data);
       } catch (error) {
         console.error("Error fetching profile data:", error);

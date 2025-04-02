@@ -17,7 +17,6 @@ const Auth = ({ setUser }) => {
         // 🔹 SIGN IN: Check if user exists in DB
         try {
           const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email });
-          console.log("Signin Success:", response.data);
           setUser(result.user);
         } catch (error) {
           if (error.response && error.response.status === 404) {
