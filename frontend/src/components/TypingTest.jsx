@@ -11,6 +11,7 @@ const TypingTest = ({ user }) => {
   const [timer, setTimer] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
   const [testFinished, setTestFinished] = useState(false);
+  const [loading, setLoading] = useState(false); // ⬅️ NEW: Loading state
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ const TypingTest = ({ user }) => {
   }, [selectedTime]);
 
   async function generateNewWords() {
+    setLoading(true); // Start loading spinner
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/get-random`);
       const words = await response.json();
@@ -33,6 +35,7 @@ const TypingTest = ({ user }) => {
     setTimer(selectedTime);
     setIsRunning(false);
     setTestFinished(false);
+    setLoading(false); // Stop loading spinner
   }
 
   useEffect(() => {
@@ -71,10 +74,8 @@ const TypingTest = ({ user }) => {
     const expectedChar = wordsString[currentIndex];
 
     if (value.length < input.length) {
-      
       if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
     } else {
-      
       setTotalTypedChars(totalTypedChars + 1);
       if (lastChar === expectedChar) {
         setCorrectChars(correctChars + 1);
@@ -114,7 +115,7 @@ const TypingTest = ({ user }) => {
                 key={time}
                 className={`mx-2 px-4 py-2 rounded-md font-semibold text-lg ${selectedTime === time ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300"}`}
                 onClick={() => {
-                  setSelectedTime(time);
+                  setSelectedTime(time); 
                   setTimeout(() => inputRef.current.focus(), 100);
                 }}
               >
@@ -123,26 +124,34 @@ const TypingTest = ({ user }) => {
             ))}
           </div>
 
-          <div className="mt-6 w-3/4 h-80 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
-  <div
-    className="absolute transition-transform duration-200"
-    style={{ transform: `translateY(-${Math.max(0, Math.floor(currentIndex / 150) * 2.5)}rem)` }}
-  >
-    {wordsString.split("").map((char, index) => {
-      let className = "text-gray-500";
-      if (index < currentIndex) {
-        className = input[index] === char ? "text-yellow-400" : "text-red-500";
-      } else if (index === currentIndex) {
-        className = "bg-blue-500 text-white animate-blink"; // Cursor effect
-      }
-      return (
-        <span key={index} className={className}>
-          {char}
-        </span>
-      );
-    })}
-  </div>
-</div>
+          {/* Show Loading Spinner while words are being fetched */}
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <div className="mt-6 w-3/4 h-80 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
+              <div
+                className="absolute transition-transform duration-200"
+                style={{ transform: `translateY(-${Math.max(0, Math.floor(currentIndex / 150) * 2.5)}rem)` }}
+              >
+                {wordsString.split("").map((char, index) => {
+                  let className = "text-gray-500";
+                  if (index < currentIndex) {
+                    className = input[index] === char ? "text-yellow-400" : "text-red-500";
+                  } else if (index === currentIndex) {
+                    className = "bg-blue-500 text-white animate-blink"; // Cursor effect
+                  }
+                  return (
+                    <span key={index} className={className}>
+                      {char}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <p className="mt-4 text-xl font-semibold">⏳ Time Left: {timer}s</p>
           <input
             ref={inputRef}
