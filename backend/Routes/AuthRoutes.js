@@ -12,9 +12,9 @@ router.post("/signup", async (req, res) => {
   const { name, email } = req.body;
 
   // Ensure only MANIT students can sign up
-  // if (!email.endsWith("@stu.manit.ac.in")) {
-  //   return res.status(400).json({ message: "Only MANIT students can sign up." });
-  // }
+  if (!email.endsWith("@stu.manit.ac.in")) {
+    return res.status(400).json({ message: "Only MANIT students can sign up." });
+  }
 
   try {
     let user = await User.findOne({ email });

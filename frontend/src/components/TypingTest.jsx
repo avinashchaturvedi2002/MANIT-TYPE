@@ -124,7 +124,7 @@ const TypingTest = ({ user }) => {
             ))}
           </div>
 
-          <div className="mt-6 w-3/4 h-96 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
+          <div className="mt-6 w-3/4 h-80 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
   <div
     className="absolute transition-transform duration-200"
     style={{ transform: `translateY(-${Math.max(0, Math.floor(currentIndex / 150) * 2.5)}rem)` }}

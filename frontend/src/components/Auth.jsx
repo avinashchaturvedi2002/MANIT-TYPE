@@ -24,10 +24,10 @@ const Auth = ({ setUser }) => {
         }
       } else {
         // 🔹 SIGN UP: Ensure email is MANIT's
-        // if (!email.endsWith("@stu.manit.ac.in")) {
-        //   alert("You can only register with a MANIT email ID.");
-        //   return;
-        // }
+        if (!email.endsWith("@stu.manit.ac.in")) {
+          alert("You can only register with a MANIT email ID.");
+          return;
+        }
 
         try {
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signup`, { name: displayName, email });
