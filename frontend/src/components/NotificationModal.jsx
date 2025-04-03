@@ -4,7 +4,6 @@ import { FaBell } from "react-icons/fa";
 
 const NotificationModal = ({ onClose,user }) => {
   const [notifications, setNotifications] = useState([]);
-  console.log(user);
   useEffect(() => {
     const fetchNotifications = async () => {
       try {

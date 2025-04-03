@@ -49,6 +49,20 @@ const TypingTest = ({ user }) => {
   }, [isRunning, timer]);
 
   useEffect(() => {
+    const handleClick = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+  
+    document.addEventListener("click", handleClick);
+  
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  useEffect(() => {
     if (testFinished && user) {
       fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/save-result`, {
         method: "POST",
@@ -61,7 +75,7 @@ const TypingTest = ({ user }) => {
         }),
       })
         .then((response) => response.json())
-        .then((data) => console.log("Result saved:", data))
+        .then((data) => console.log("Result saved"))
         .catch((error) => console.error("Error saving result:", error));
     }
   }, [testFinished, user]);
@@ -102,7 +116,10 @@ const TypingTest = ({ user }) => {
           <h1 className="text-4xl font-bold mb-4">Typing Test Results</h1>
           <p className="text-2xl">🔥 WPM: {calculateWPM()}</p>
           <p className="text-2xl">🎯 Accuracy: {calculateAccuracy()}%</p>
-          <button className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-md text-lg" onClick={generateNewWords}>
+          <button className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-md text-lg" onClick={() => {
+    generateNewWords();
+    setTimeout(() => inputRef.current?.focus(), 100); // Refocus after a short delay
+  }}>
             Restart Test
           </button>
         </div>
@@ -115,7 +132,7 @@ const TypingTest = ({ user }) => {
                 key={time}
                 className={`mx-2 px-4 py-2 rounded-md font-semibold text-lg ${selectedTime === time ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300"}`}
                 onClick={() => {
-                  setSelectedTime(time); 
+                  setSelectedTime(time); // No need to call generateNewWords() here
                   setTimeout(() => inputRef.current.focus(), 100);
                 }}
               >
@@ -130,27 +147,29 @@ const TypingTest = ({ user }) => {
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="mt-6 w-3/4 h-80 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
-              <div
-                className="absolute transition-transform duration-200"
-                style={{ transform: `translateY(-${Math.max(0, Math.floor(currentIndex / 150) * 2.5)}rem)` }}
-              >
-                {wordsString.split("").map((char, index) => {
-                  let className = "text-gray-500";
-                  if (index < currentIndex) {
-                    className = input[index] === char ? "text-yellow-400" : "text-red-500";
-                  } else if (index === currentIndex) {
-                    className = "bg-blue-500 text-white animate-blink"; // Cursor effect
-                  }
-                  return (
-                    <span key={index} className={className}>
-                      {char}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            <div className="mt-6 w-3/4 h-40 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
+  <div
+    className="absolute transition-transform duration-200"
+    style={{
+      transform: `translateY(-${Math.max(0, (Math.floor(currentIndex / 70) - 1) * 2.5)}rem)`,
+    }}
+  >
+    {wordsString.split("").map((char, index) => {
+      let className = "text-gray-500";
+      if (index < currentIndex) {
+        className = input[index] === char ? "text-yellow-400" : "text-red-500";
+      } else if (index === currentIndex) {
+        className = "bg-green-500 text-white animate-blink "; // Cursor effect
+      }
+      return (
+        <span key={index} className={className}>
+          {char}
+        </span>
+      );
+    })}
+  </div>
+</div>
+      )}
 
           <p className="mt-4 text-xl font-semibold">⏳ Time Left: {timer}s</p>
           <input
@@ -161,6 +180,12 @@ const TypingTest = ({ user }) => {
             autoFocus
             className="absolute opacity-0"
           />
+          <button className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-md text-lg" onClick={() => {
+    generateNewWords();
+    setTimeout(() => inputRef.current?.focus(), 100); // Refocus after a short delay
+  }}>
+            Restart Test
+          </button>
         </>
       )}
     </div>
