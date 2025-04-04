@@ -155,18 +155,28 @@ const TypingTest = ({ user }) => {
     }}
   >
     {wordsString.split("").map((char, index) => {
-      let className = "text-gray-500";
-      if (index < currentIndex) {
-        className = input[index] === char ? "text-yellow-400" : "text-red-500";
-      } else if (index === currentIndex) {
-        className = "bg-green-500 text-white animate-blink "; // Cursor effect
-      }
-      return (
-        <span key={index} className={className}>
-          {char}
-        </span>
-      );
-    })}
+  if (index === currentIndex) {
+    return (
+      <span key={index} className="relative">
+        <span className="text-gray-500">{char}</span>
+        <span className="absolute -left-1 top-0 h-full w-1 bg-green-500 "></span>
+      </span>
+    );
+  }
+
+  const className =
+    index < currentIndex
+      ? input[index] === char
+        ? "text-yellow-400"
+        : "text-red-500"
+      : "text-gray-500";
+
+  return (
+    <span key={index} className={className}>
+      {char}
+    </span>
+  );
+})}
   </div>
 </div>
       )}

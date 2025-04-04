@@ -3,14 +3,9 @@
 @tailwind utilities;
 
 @keyframes blink {
-  50% {
-    opacity: 0;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
-
-.blinking-cursor {
-  color: yellow;
-  font-weight: bold;
-  animation: blink 1s infinite;
-  opacity: 70%;
+.animate-blink {
+  animation: blink 1s step-start infinite;
 }

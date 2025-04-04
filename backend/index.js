@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-const allowedOrigins = ['https://manit-type-mftz.vercel.app']; // your frontend domain
+const allowedOrigins = ['https://manit-type-mftz.vercel.app','http://localhost:5178']; // your frontend domain
 
 app.use(cors({
   origin: allowedOrigins,
