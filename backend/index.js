@@ -6,7 +6,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = ['https://manit-type-mftz.vercel.app']; // your frontend domain
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // if you're using cookies/auth
+}));
 app.use(express.json());
 app.use("/api/v1/user",authrouter)
 // Default Route
