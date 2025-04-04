@@ -10,16 +10,30 @@ import AboutPage from "./components/AboutPage";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [verifiedUser, setVerifiedUser] = useState(null); // ⬅️ Only set this after backend confirms
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 🔹 Listen for authentication changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      setLoading(false); // Stop loading once auth state is known
+
+      if (currentUser) {
+        try {
+          // 🔹 Check if the user exists in DB
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email: currentUser.email });
+          setVerifiedUser(currentUser); // ✅ Only set if backend confirms
+        } catch (error) {
+          await signOut(auth); // 🚀 Sign out immediately if not in DB
+          setVerifiedUser(null); 
+        }
+      } else {
+        setVerifiedUser(null);
+      }
+      
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Cleanup listener
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
@@ -34,13 +48,15 @@ function App() {
     <Router>
       <div className="flex min-h-screen bg-gray-100">
         <Routes>
-          <Route path="/" element={user ? <TypingTest user={user} /> : <Auth setUser={setUser} />} />
-          <Route path="/leaderboard" element={user ? <Leaderboard user={user} /> : <Auth setUser={setUser} />} />
-          <Route path="/about" element={user ? <AboutPage user={user} /> : <Auth setUser={setUser} />} />
+          <Route path="/" element={verifiedUser ? <TypingTest user={verifiedUser} /> : <Auth setUser={setUser} />} />
+          <Route path="/leaderboard" element={verifiedUser ? <Leaderboard user={verifiedUser} /> : <Auth setUser={setUser} />} />
+          <Route path="/about" element={verifiedUser ? <AboutPage user={verifiedUser} /> : <Auth setUser={setUser} />} />
         </Routes>
       </div>
     </Router>
   );
 }
+
+
 
 export default App;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import googleIcon from "../assets/google.png";
 import axios from "axios";
 
@@ -8,45 +9,45 @@ const Auth = ({ setUser }) => {
   const [loading, setLoading] = useState(false); // ⬅️ NEW: Loading state
 
   const handleAuth = async (isSignin) => {
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const { displayName, email } = result.user;
-
+  
       if (isSignin) {
-        // 🔹 SIGN IN: Check if user exists in DB
         try {
-          const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email });
-          setUser(result.user);
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email });
+          // ❌ No need to setUser here, App.js will handle it after verification
         } catch (error) {
           if (error.response && error.response.status === 404) {
-            alert("User not found. Please sign up first.");
-          } else {
-            console.error("Signin Error:", error);
+            await signOut(auth);
+            setLoading(false);
+            return alert("User not found. Please sign up first.");
           }
-          setLoading(false); // Stop loading on error
         }
       } else {
-        // 🔹 SIGN UP: Ensure email is MANIT's
         if (!email.endsWith("@stu.manit.ac.in")) {
-          alert("You can only register with a MANIT email ID.");
-          setLoading(false); // Stop loading
-          return;
+          await signOut(auth);
+          setLoading(false);
+          return alert("You can only register with a MANIT email ID.");
         }
-
+  
         try {
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signup`, { name: displayName, email });
-          setUser(result.user);
         } catch (error) {
           console.error("Signup Error:", error);
-          setLoading(false); // Stop loading on error
         }
       }
     } catch (error) {
       console.error("Auth Error:", error);
-      setLoading(false); // Stop loading on error
     }
+    setLoading(false);
   };
+  
+  
+  
+  
+  
 
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen bg-gray-900 text-white">
