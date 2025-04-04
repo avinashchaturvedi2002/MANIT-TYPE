@@ -30,9 +30,14 @@ const Leaderboard = ({ user }) => {
     fetchLeaderboard();
   }, [mode]);
 
-  const filteredLeaderboard = leaderboard.filter((entry) =>
-    entry.userId.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredLeaderboard = leaderboard.filter((entry) => {
+    if (!entry.userId || !entry.userId.name) {
+      console.warn("Skipping entry due to missing user info:", entry);
+      return false;
+    }
+  
+    return entry.userId.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="flex flex-col w-full bg-gray-900 text-gray-500 min-h-screen">
