@@ -7,7 +7,7 @@ import ProfileModal from "./ProfileModal";
 import NotificationModal from "./NotificationModal";
 import axios from "axios";
 
-const NavBar = ({ user }) => {
+const NavBar = ({user, setUser }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -32,6 +32,7 @@ const NavBar = ({ user }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      setUser(null);
       navigate("/"); // Redirect to landing page
     } catch (error) {
       console.error("Error logging out:", error);

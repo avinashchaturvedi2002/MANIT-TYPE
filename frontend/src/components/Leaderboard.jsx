@@ -36,7 +36,7 @@ const Leaderboard = ({ user }) => {
 
   return (
     <div className="flex flex-col w-full bg-gray-900 text-gray-500 min-h-screen">
-      <NavBar user={user} />
+      {/* <NavBar user={user} /> */}
       <div className="p-5">
         <h2 className="text-2xl font-bold mb-4 text-center text-white">Leaderboard</h2>
         

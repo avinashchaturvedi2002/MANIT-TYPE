@@ -110,7 +110,7 @@ const TypingTest = ({ user }) => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center w-full">
-      <NavBar user={user} />
+      {/* <NavBar user={user} /> */}
       {testFinished ? (
         <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 text-white">
           <h1 className="text-4xl font-bold mb-4">Typing Test Results</h1>

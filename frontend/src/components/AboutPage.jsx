@@ -29,7 +29,7 @@ const AboutPage = ({ user }) => {
 
   return (
     <div className="flex flex-col w-full">
-      <NavBar user={user} />
+      {/* <NavBar user={user} /> */}
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 sm:p-6 w-full space-y-6 sm:space-y-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-center">About This Platform</h1>
         <p className="text-md sm:text-lg text-center">

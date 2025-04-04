@@ -9,44 +9,49 @@ const Auth = ({ setUser }) => {
   const [loading, setLoading] = useState(false); // ⬅️ NEW: Loading state
 
   const handleAuth = async (isSignin) => {
-    setLoading(true);
+    setLoading(true); // Start loading
     try {
       const result = await signInWithPopup(auth, provider);
       const { displayName, email } = result.user;
   
       if (isSignin) {
+        // 🔹 SIGN IN: Check if user exists in DB
         try {
-          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email });
-          // ❌ No need to setUser here, App.js will handle it after verification
+          const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signin`, { email });
+          setUser(result.user);
         } catch (error) {
           if (error.response && error.response.status === 404) {
-            await signOut(auth);
-            setLoading(false);
-            return alert("User not found. Please sign up first.");
+            await signOut(auth)
+            alert("User not found. Please sign up first.");
+          } else {
+            console.error("Signin Error:", error);
           }
+          setLoading(false); // Stop loading on error
         }
       } else {
-        if (!email.endsWith("@stu.manit.ac.in")) {
-          await signOut(auth);
-          setLoading(false);
-          return alert("You can only register with a MANIT email ID.");
+        // 🔹 SIGN UP: Ensure email is MANIT's
+        if (!email.endsWith("@stu.manit.ac.in")) {  
+          alert("You can only register with a MANIT email ID.");  
+          
+          await signOut(auth); // ⬅️ NEW: Logs out non-MANIT users immediately**
+          
+          setLoading(false); // Stop loading  
+          return;
         }
   
         try {
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/signup`, { name: displayName, email });
+          setUser(result.user);
         } catch (error) {
           console.error("Signup Error:", error);
+          setLoading(false); // Stop loading on error
         }
       }
     } catch (error) {
       console.error("Auth Error:", error);
+      setLoading(false); // Stop loading on error
     }
-    setLoading(false);
   };
-  
-  
-  
-  
   
 
   return (
