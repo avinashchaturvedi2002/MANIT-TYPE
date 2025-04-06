@@ -54,8 +54,8 @@ const AboutPage = ({ user }) => {
           </div>
           <div className="text-lg bg-gray-800 p-4 sm:p-6 rounded-lg flex flex-col justify-center items-center w-full h-36">
             <div className="text-gray-400">Total Typing Time</div>
-            <div className="text-5xl sm:text-6xl">{stats.duration}</div>
-            <div className="text-gray-400">seconds</div>
+            <div className="text-5xl sm:text-6xl">{Math.round((stats.duration/3600)*100)/100}</div>
+            <div className="text-gray-400">hours</div>
           </div>
         </div>
 
