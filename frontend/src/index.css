@@ -9,3 +9,24 @@
 .animate-blink {
   animation: blink 1s step-start infinite;
 }
+/* Custom Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: #000000;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #000000; /* Tailwind's gray-800 (DARKER) */
+  border-radius: 6px;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #00050d transparent;
+}

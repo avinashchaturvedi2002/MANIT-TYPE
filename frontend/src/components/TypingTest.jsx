@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import NavBar from "./NavBar";
 
 const TypingTest = ({ user }) => {
+  const scrollRef = useRef(null);
+  const cursorRef = useRef(null);
   const [selectedTime, setSelectedTime] = useState(30);
-  const [wordsString, setWordsString] = useState("");
-  const [input, setInput] = useState("");
-  const [correctChars, setCorrectChars] = useState(0);
-  const [totalTypedChars, setTotalTypedChars] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [wordsArray, setWordsArray] = useState([]);
+  const [typedWords, setTypedWords] = useState([]);
+  const [currentWord, setCurrentWord] = useState("");
   const [timer, setTimer] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
   const [testFinished, setTestFinished] = useState(false);
-  const [loading, setLoading] = useState(false); // ⬅️ NEW: Loading state
+  const [correctChars, setCorrectChars] = useState(0);
+  const [totalTypedChars, setTotalTypedChars] = useState(0);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -19,28 +21,27 @@ const TypingTest = ({ user }) => {
   }, [selectedTime]);
 
   async function generateNewWords() {
-    setLoading(true); // Start loading spinner
+    setLoading(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/user/get-random`);
       const words = await response.json();
-      setWordsString(words.join(" "));
+      setWordsArray(words);
     } catch (error) {
       console.error("Error fetching words:", error);
     }
-    
-    setInput("");
-    setCorrectChars(0);
-    setTotalTypedChars(0);
-    setCurrentIndex(0);
+    setTypedWords([]);
+    setCurrentWord("");
     setTimer(selectedTime);
     setIsRunning(false);
     setTestFinished(false);
-    setLoading(false); // Stop loading spinner
+    setCorrectChars(0);
+    setTotalTypedChars(0);
+    setLoading(false);
   }
 
   useEffect(() => {
     if (isRunning && timer > 0) {
-      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+      const interval = setInterval(() => setTimer(prev => prev - 1), 1000);
       return () => clearInterval(interval);
     } else if (timer === 0) {
       setIsRunning(false);
@@ -49,17 +50,9 @@ const TypingTest = ({ user }) => {
   }, [isRunning, timer]);
 
   useEffect(() => {
-    const handleClick = () => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-  
+    const handleClick = () => inputRef.current?.focus();
     document.addEventListener("click", handleClick);
-  
-    return () => {
-      document.removeEventListener("click", handleClick);
-    };
+    return () => document.removeEventListener("click", handleClick);
   }, []);
 
   useEffect(() => {
@@ -71,33 +64,41 @@ const TypingTest = ({ user }) => {
           email: user.email,
           mode: `${selectedTime}s`,
           actualWPM: calculateWPM(),
-          accuracy: calculateAccuracy(),
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => console.log("Result saved"))
-        .catch((error) => console.error("Error saving result:", error));
+          accuracy: calculateAccuracy()
+        })
+      });
     }
   }, [testFinished, user]);
 
   function handleInput(e) {
+    const value = e.target.value;
     if (!isRunning) setIsRunning(true);
 
-    const value = e.target.value;
-    const lastChar = value[value.length - 1];
-    const expectedChar = wordsString[currentIndex];
+    const split = value.trim().split(" ");
+    const endsWithSpace = value.endsWith(" ");
+    const newTypedWords = endsWithSpace ? [...split] : split.slice(0, -1);
+    const newCurrentWord = endsWithSpace ? "" : split[split.length - 1];
 
-    if (value.length < input.length) {
-      if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
-    } else {
-      setTotalTypedChars(totalTypedChars + 1);
-      if (lastChar === expectedChar) {
-        setCorrectChars(correctChars + 1);
+    setTypedWords(newTypedWords);
+    setCurrentWord(newCurrentWord);
+
+    let correct = 0;
+    let total = 0;
+    newTypedWords.forEach((typed, idx) => {
+      const expected = wordsArray[idx] || "";
+      const maxLen = Math.max(typed.length, expected.length);
+      total += maxLen;
+      for (let i = 0; i < maxLen; i++) {
+        if (typed[i] === expected[i]) correct++;
       }
-      setCurrentIndex(currentIndex + 1);
-    }
+    });
 
-    setInput(value);
+    setCorrectChars(correct);
+    setTotalTypedChars(total);
+
+    if (cursorRef.current) {
+      cursorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }
 
   function calculateWPM() {
@@ -109,93 +110,87 @@ const TypingTest = ({ user }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center w-full">
-      {/* <NavBar user={user} /> */}
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center w-full px-4">
       {testFinished ? (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-900 text-white">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center">
           <h1 className="text-4xl font-bold mb-4">Typing Test Results</h1>
-          <p className="text-2xl">🔥 WPM: {calculateWPM()}</p>
+          <p className="text-3xl">🔥 WPM: {calculateWPM()}</p>
           <p className="text-2xl">🎯 Accuracy: {calculateAccuracy()}%</p>
           <button className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-md text-lg" onClick={() => {
-    generateNewWords();
-    setTimeout(() => inputRef.current?.focus(), 100); // Refocus after a short delay
-  }}>
-            Restart Test
-          </button>
+            generateNewWords();
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }}>Restart Test</button>
         </div>
       ) : (
         <>
-          <div className="mt-4 bg-gray-800 shadow-md p-4 rounded-md">
-            <span className="font-semibold text-lg">Time: </span>
-            {[15, 30, 60, 120].map((time) => (
+          <div className="mt-4 w-full max-w-4xl flex flex-wrap justify-center gap-2 sm:gap-4 text-center">
+            <span className="font-semibold text-lg w-full text-center">Time:</span>
+            {[15, 30, 60, 120].map(time => (
               <button
                 key={time}
-                className={`mx-2 px-4 py-2 rounded-md font-semibold text-lg ${selectedTime === time ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300"}`}
+                className={`min-w-[4rem] sm:min-w-[5rem] px-3 py-2 sm:px-4 sm:py-2 rounded-md font-semibold text-sm sm:text-base md:text-lg ${selectedTime === time ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-300"}`}
                 onClick={() => {
-                  setSelectedTime(time); // No need to call generateNewWords() here
-                  setTimeout(() => inputRef.current.focus(), 100);
-                }}
-              >
-                {time}s
-              </button>
+                  setSelectedTime(time);
+                  setTimeout(() => inputRef.current?.focus(), 100);
+                }}>{time}s</button>
             ))}
           </div>
 
-          {/* Show Loading Spinner while words are being fetched */}
           {loading ? (
             <div className="flex justify-center items-center h-40">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="mt-6 w-3/4 h-40 bg-gray-800 p-4 rounded-md shadow-md text-left text-3xl font-mono overflow-hidden relative">
-  <div
-    className="absolute transition-transform duration-200"
-    style={{
-      transform: `translateY(-${Math.max(0, (Math.floor(currentIndex / 70) - 1) * 2.5)}rem)`,
-    }}
-  >
-    {wordsString.split("").map((char, index) => {
-  if (index === currentIndex) {
-    return (
-      <span key={index} className="relative">
-        <span className="text-gray-500">{char}</span>
-        <span className="absolute -left-1 top-0 h-full w-1 bg-green-500 "></span>
-      </span>
-    );
-  }
+            <div className="mt-6 w-10/12 h-40  text-left text-4xl font-mono overflow-hidden leading-normal tracking-wide flex flex-wrap" style={{ scrollBehavior: 'smooth' }} ref={scrollRef}>
+              {wordsArray.map((word, index) => {
+                const typed = typedWords[index];
+                const isActive = index === typedWords.length;
+                const isTyped = index < typedWords.length;
 
-  const className =
-    index < currentIndex
-      ? input[index] === char
-        ? "text-yellow-400"
-        : "text-red-500"
-      : "text-gray-500";
+                let wordClasses = "mr-2";
+                if (isTyped && typed !== word) wordClasses += " border-b-2 border-red-500";
 
-  return (
-    <span key={index} className={className}>
-      {char}
-    </span>
-  );
-})}
-  </div>
-</div>
-      )}
+                return (
+                  <span key={index} className={wordClasses}>
+                    {word.split("").map((char, i) => {
+                      let charClass = "text-gray-500";
+                      if (isTyped) {
+                        charClass = typed[i] === char ? "text-yellow-400" : "text-red-500";
+                      } else if (isActive) {
+                        const typedChar = currentWord[i];
+                        if (typedChar !== undefined) {
+                          charClass = typedChar === char ? "text-yellow-400" : "text-red-500";
+                        }
+                      }
+                      const isCursor = isActive && i === currentWord.length;
+                      const ref = isCursor ? cursorRef : null;
+                      return (
+                        <span key={i} className="relative" ref={ref}>
+                          {isCursor && <span className="absolute -left-1 top-0 h-full w-0.5 bg-green-500 animate-pulse"></span>}
+                          <span className={charClass}>{char}</span>
+                        </span>
+                      );
+                    })}
+                    
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           <p className="mt-4 text-xl font-semibold">⏳ Time Left: {timer}s</p>
           <input
             ref={inputRef}
             type="text"
-            value={input}
+            value={[...typedWords, currentWord].join(" ")}
             onChange={handleInput}
             autoFocus
             className="absolute opacity-0"
           />
           <button className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-md text-lg" onClick={() => {
-    generateNewWords();
-    setTimeout(() => inputRef.current?.focus(), 100); // Refocus after a short delay
-  }}>
-            Restart Test
-          </button>
+            generateNewWords();
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }}>Restart Test</button>
         </>
       )}
     </div>
